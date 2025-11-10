@@ -1,9 +1,9 @@
 # Chatbot AI
 
 - Giai đoạn 1 – Phân tích và thiết kế (Tuần 1)
-+ Xác định mục tiêu, phạm vi chatbot.
-+ Tìm hiểu mô hình chatbot.
-+ Thiết kế sơ đồ hoạt động và giao diện cơ bản.
+Xác định mục tiêu, phạm vi chatbot.
+Tìm hiểu mô hình chatbot.
+Thiết kế sơ đồ hoạt động và giao diện cơ bản.
 
 - Giai đoạn 2 – Xử lý dữ liệu & Huấn luyện mô hình (Tuần 2)
 + Tiền xử lý dữ liệu hội thoại (loại bỏ ký tự thừa, chuẩn hóa chữ).
