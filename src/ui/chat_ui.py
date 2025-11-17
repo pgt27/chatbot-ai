@@ -1,120 +1,138 @@
+
 import streamlit as st
-import json
-import datetime
+import time
 
-def main():
-    st.set_page_config(
-        page_title="AI Chatbot",
-        page_icon="🤖",
-        layout="centered"
-    )
-    
-    if 'chat_history' not in st.session_state:
-        st.session_state.chat_history = []
-    
-    if 'current_input' not in st.session_state:
-        st.session_state.current_input = ""
-    
-    st.title("🤖 AI Chatbot")
-    st.markdown("---")
-    
-    with st.sidebar:
-        st.header("Cài đặt")
-        
-        model_options = ["llama2", "mistral", "gemma"]
-        selected_model = st.selectbox("Chọn model:", model_options)
-        
-        if st.button("🗑️ Xóa lịch sử chat"):
-            st.session_state.chat_history = []
-            st.rerun()
-        
-        if st.button("💾 Lưu lịch sử"):
-            save_chat_history()
-        
-        st.markdown("---")
-        st.info("Chatbot Interface v1.0")
-    
-    display_chat_history()
-    
-    st.markdown("### Nhập tin nhắn:")
-    user_input = st.text_area(
-        "Nhập tin nhắn của bạn...",
-        key="user_input",
-        height=100,
-        placeholder="Xin chào! Tôi có thể giúp gì cho bạn?"
-    )
-    
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        if st.button("🚀 Gửi tin nhắn", use_container_width=True):
-            if user_input.strip():
-                process_user_message(user_input, selected_model)
-                st.rerun()
-
-def display_chat_history():
-    """Hiển thị lịch sử chat"""
-    if not st.session_state.chat_history:
-        st.info("Chưa có tin nhắn nào. Hãy bắt đầu trò chuyện!")
-        return
-    
-    chat_container = st.container()
-    
-    with chat_container:
-        for i, chat in enumerate(st.session_state.chat_history):
-            with st.chat_message("user"):
-                st.write(f"**Bạn:** {chat['user']}")
-                st.caption(f"*{format_timestamp(chat['timestamp'])}*")
-            
-            with st.chat_message("assistant"):
-                st.write(f"**AI:** {chat['ai']}")
-                st.caption(f"*Model: {chat['model']} - {format_timestamp(chat['timestamp'])}*")
-            
-            if i < len(st.session_state.chat_history) - 1:
-                st.markdown("---")
-
-def process_user_message(user_input, model):
-    """Xử lý tin nhắn người dùng"""
-    ai_response = generate_ai_response(user_input)
-    
-    st.session_state.chat_history.append({
-        "timestamp": datetime.datetime.now().isoformat(),
-        "user": user_input,
-        "ai": ai_response,
-        "model": model
-    })
-    
-    st.session_state.user_input = ""
+PRIMARY_COLOR = "#004aad"  
+SECONDARY_COLOR = "#F0F0FF" 
+BACKGROUND_COLOR = "#FFF" 
+BORDER_COLOR = "#E0BBE4"    
 
 def generate_ai_response(user_input):
-    """Tạo phản hồi AI giả lập"""
-    user_input_lower = user_input.lower()
+    """Giả lập phản hồi từ AI."""
+    time.sleep(0.5)
+    return f"Công chúa: '{user_input}'"
+
+def apply_custom_styles():
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-color: {BACKGROUND_COLOR};
+            max-width: 400px; 
+            margin: auto;
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); 
+            border: 1px solid {BORDER_COLOR}; 
+            overflow: hidden; 
+        }}
+
+       
+        header {{ visibility: hidden; }}
+        .block-container {{ padding-top: 0rem; padding-bottom: 0rem; }}
+        
+        
+        .st-emotion-cache-r423a6 {{ 
+            background-image: linear-gradient(to right, #000000, #3533cd); 
+            color: white;
+            padding: 15px 15px 15px 20px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            margin-top: 0px !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }}
+        
+        .stChatMessage {{
+            border-radius: 12px;
+            padding: 5px 10px;
+            margin-bottom: 10px;
+        }}
+
+        .stChatMessage:nth-child(odd) {{ 
+            background-color: {SECONDARY_COLOR}; 
+            color: #333333;
+        }}
+        
+        .stChatMessage:nth-child(even) {{ 
+            background-color: #F0FFF0; 
+            color: #333333;
+        }}
+
+        div[data-testid="stChatInput"] {{
+            border-top: 1px solid {BORDER_COLOR};
+            padding: 10px 15px;
+            background-color: #FFFFFF;
+        }}
+        
+        div[data-testid="stChatInput"] label {{ display: none; }}
+        div[data-testid="stChatInput"] svg {{ visibility: hidden; }}
+        
+        
+        button[data-testid="baseButton"] {{
+            background-color: {PRIMARY_COLOR};
+            color: white;
+            border-radius: 50%; 
+            width: 35px;
+            height: 35px;
+            line-height: 0;
+            margin-left: 5px;
+        }}
+        button[data-testid="baseButton"]:hover {{
+            background-color: #E63999; 
+        }}
+        
+        input[type="text"] {{
+            border-radius: 20px;
+            border: 1px solid {BORDER_COLOR};
+            padding: 10px 15px;
+            font-style: italic;
+        }}
+
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+def main_ui():
+    apply_custom_styles()
     
-    if any(word in user_input_lower for word in ["xin chào", "hello", "hi"]):
-        return "Xin chào! Tôi là AI chatbot. Tôi có thể giúp gì cho bạn?"
-    elif any(word in user_input_lower for word in ["cảm ơn", "thanks"]):
-        return "Không có gì! Rất vui được giúp đỡ bạn."
-    elif any(word in user_input_lower for word in ["tạm biệt", "bye"]):
-        return "Tạm biệt! Hẹn gặp lại bạn."
-    else:
-        return f"Tôi đã nhận được tin nhắn: '{user_input}'. Đây là phản hồi mẫu từ AI."
+    st.markdown(
+        f"""
+        <div style="background-image: linear-gradient(to right, #FF33CC, #CC33FF); color: white; padding: 10px 15px; border-top-left-radius: 15px; border-top-right-radius: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 1.2em; font-weight: bold;">Chat with us</span>
+                <div>
+                    <span style="margin-right: 15px; cursor: pointer;">&#8226;&#8226;&#8226;</span> 
+                    <span style="cursor: pointer;">&#x2715;</span> </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    
+   
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = [{"role": "ai", "content": "Chào bé, chị có thể giúp gì cho bé hong?"}]
 
-def save_chat_history():
-    """Lưu lịch sử chat vào file JSON"""
-    if st.session_state.chat_history:
-        filename = f"chat_history_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        try:
-            with open(filename, "w", encoding="utf-8") as f:
-                json.dump(st.session_state.chat_history, f, ensure_ascii=False, indent=2)
-            st.sidebar.success(f"Đã lưu vào {filename}")
-        except Exception as e:
-            st.sidebar.error(f"Lỗi khi lưu: {e}")
-    else:
-        st.sidebar.warning("Không có lịch sử chat để lưu")
+   
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-def format_timestamp(timestamp_str):
-    """Định dạng timestamp"""
-    try:
-        dt = datetime.datetime.fromisoformat(timestamp_str)
-        return dt.strftime("%H:%M:%S %d/%m/%Y")
-    except:
-        return timestamp_str
+   
+    if prompt := st.chat_input("Type a message..."):
+        
+       
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+       
+        with st.chat_message("ai"):
+            with st.spinner("Công chúa đang si nghĩ..."):
+                ai_response = generate_ai_response(prompt)
+                st.markdown(ai_response)
+                st.session_state.messages.append({"role": "ai", "content": ai_response})
+
+if __name__ == "__main__":
+    main_ui()
