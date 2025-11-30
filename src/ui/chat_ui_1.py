@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from src.ui.chat_save_load import load_messages, save_messages
+from src.backend.ollama_client import load_messages, save_messages
 
 def generate_ai_response(user_input):
     time.sleep(0.5)
@@ -93,3 +93,4 @@ def ui():
 def main_ui():
     apply_custom_styles()
     ui()
+
