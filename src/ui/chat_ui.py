@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+from src.backend.ollama_client import load_messages, save_messages
 
 def generate_ai_response(user_input):
     time.sleep(0.5)
@@ -70,6 +71,10 @@ def ui():
         unsafe_allow_html=True
     )
     if "messages" not in st.session_state:
+        loaded = load_messages()
+    if loaded:
+        st.session_state["messages"] = loaded
+    else:
         st.session_state["messages"] = [{"role": "ai", "content": "Có cần giúp gì hong?🥱"}]
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
@@ -86,3 +91,4 @@ def ui():
 def main_ui():
     apply_custom_styles()
     ui()
+
