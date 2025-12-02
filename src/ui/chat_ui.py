@@ -72,15 +72,16 @@ def ui():
     )
     if "messages" not in st.session_state:
         loaded = load_messages()
-    if loaded:
-        st.session_state["messages"] = loaded
-    else:
-        st.session_state["messages"] = [{"role": "ai", "content": "Có cần giúp gì hong?🥱"}]
+        if loaded:
+            st.session_state["messages"] = loaded
+        else:
+            st.session_state["messages"] = [{"role": "ai", "content": "Có cần giúp gì hong?🥱"}]
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
     if prompt := st.chat_input("Nhắn tin cho Thanh niên nghiêm túc ..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
+        save_messages(st.session_state.messages)
         with st.chat_message("user"):
             st.markdown(prompt)
         with st.chat_message("ai"):
@@ -88,6 +89,7 @@ def ui():
                 ai_response = generate_ai_response(prompt)
                 st.markdown(ai_response)
                 st.session_state.messages.append({"role": "ai", "content": ai_response})
+                save_messages(st.session_state.messages)
 def main_ui():
     apply_custom_styles()
     ui()
