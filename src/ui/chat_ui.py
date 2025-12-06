@@ -3,8 +3,8 @@ import time
 from src.backend.ollama_client import load_messages, save_messages
 
 def generate_ai_response(user_input):
-    time.sleep(0.5)
-    return f"Thanh niên : '{user_input}'"
+    from src.backend.ollama_client import generate_response_with_history
+    return generate_response_with_history(st.session_state.messages)
 
 def apply_custom_styles():
     st.markdown(
@@ -93,4 +93,5 @@ def ui():
 def main_ui():
     apply_custom_styles()
     ui()
+
 
