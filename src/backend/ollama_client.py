@@ -1,7 +1,8 @@
 import os
 import json
 from typing import List, Dict, Any, Optional
-
+import requests
+import ollama
 
 def _project_root() -> str:
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -99,4 +100,5 @@ def generate_response_with_history(messages: List[Dict[str, str]], model: str = 
             if last_user_message:
                 return generate_response_ollama(last_user_message, model)
         return "Xin lỗi, đã có lỗi xảy ra khi kết nối với AI."
+
 
