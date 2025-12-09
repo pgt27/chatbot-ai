@@ -118,7 +118,7 @@ def generate_response(prompt: str, model: str = DEFAULT_MODEL) -> str:
     except Exception as e:
         return f"Lỗi kết nối: {str(e)}"
 
-def chat_with_history(messages: List[Dict[str, str]], model: str = "DEFAULT_MODEL) -> str:
+def chat_with_history(messages: List[Dict[str, str]], model: str = DEFAULT_MODEL) -> str:
     try:
         response = ollama.chat(
             model=model,
@@ -132,6 +132,7 @@ def chat_with_history(messages: List[Dict[str, str]], model: str = "DEFAULT_MODE
             ""
         )
         return generate_response(last_user_msg, model)
+
 
 
 
