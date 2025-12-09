@@ -44,6 +44,11 @@ def save_messages(messages: List[Dict[str, Any]], filename: Optional[str] = None
         except Exception:
             pass
 
+def clear_chat():
+    """Xóa toàn bộ lịch sử chat"""
+    st.session_state.messages = [{"role": "ai", "content": "Có cần giúp gì hong?🥱"}]
+    save_messages(st.session_state.messages)
+    st.rerun()
 
 def clear_history(filename: Optional[str] = None) -> None:
     path = history_path(filename)
@@ -127,6 +132,7 @@ def chat_with_history(messages: List[Dict[str, str]], model: str = "DEFAULT_MODE
             ""
         )
         return generate_response(last_user_msg, model)
+
 
 
 
