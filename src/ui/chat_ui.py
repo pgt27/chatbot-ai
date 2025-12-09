@@ -51,34 +51,21 @@ def apply_custom_styles():
     )
 
 def ui():
+    def ui():
     # HEADER VỚI STREAMLIT COMPONENTS - CÓ THỂ TƯƠNG TÁC
     col1, col2 = st.columns([4, 1])
     
     with col1:
-            st.markdown(
-        """
-        <div style="
-            position: absolute;          /* Cố định bên trong khung chat */
-            top: 0;                      
-            left: 0;                     
-            width: 100%;                
-            height: 60px;                
-            background-color: #004aad;   
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25em;
-            font-weight: bold;
-            border-radius: 30px 30px 0 0; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
-            z-index: 20;                 
-        ">
-            Thanh niên nghiêm túc
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        st.markdown(
+            """
+            <div style="background: #004aad; position: fixed; top: 10px; color: white; padding: 10px 15px; border-radius: 30px 30px 0 0;">
+                <span style="font-size: 1.2em; font-weight: bold;">
+                    Thanh niên nghiêm túc
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     
     with col2:
@@ -177,4 +164,5 @@ def ui():
 def main_ui():
     apply_custom_styles()
     ui()
+
 
