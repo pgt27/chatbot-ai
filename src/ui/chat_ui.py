@@ -1,11 +1,11 @@
 import streamlit as st
 import time
 from src.backend.ollama_client import load_messages, save_messages
+from src.backend.ollama_client import chat_with_history
 
-def generate_ai_response(user_input):
-    from src.backend.ollama_client import generate_response_with_history
-    return generate_response_with_history(st.session_state.messages)
-
+def generate_ai_response(user_input: str) -> str:
+    return chat_with_history(st.session_state.messages)
+    
 def apply_custom_styles():
     st.markdown(
         f"""
@@ -93,5 +93,6 @@ def ui():
 def main_ui():
     apply_custom_styles()
     ui()
+
 
 
