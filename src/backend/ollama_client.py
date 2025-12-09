@@ -59,9 +59,7 @@ env["OLLAMA_ORIGINS"] = "*"
 
 
 def run_ollama_serve():
-    """Chạy ollama serve ở thread riêng."""
     subprocess.Popen(["ollama", "serve"], env=env)
-
 
 thread = threading.Thread(target=run_ollama_serve)
 thread.start()
@@ -70,7 +68,6 @@ time.sleep(5)
 PINGGY_URL = "http://tytji-34-124-205-38.a.free.pinggy.link"
 
 def generate_response(prompt: str, model: str = "llama3.2:3b") -> str:
-    """Gọi model qua API Pinggy."""
     try:
         url = f"{PINGGY_URL}/api/generate"
         payload = {
@@ -88,7 +85,6 @@ def generate_response(prompt: str, model: str = "llama3.2:3b") -> str:
         return f"Lỗi kết nối: {str(e)}"
 
 def chat_with_history(messages: List[Dict[str, str]], model: str = "llama3.2:3b") -> str:
-    """Chat theo kiểu Ollama, nếu lỗi chuyển sang API Pinggy."""
     try:
         response = ollama.chat(
             model=model,
@@ -102,6 +98,7 @@ def chat_with_history(messages: List[Dict[str, str]], model: str = "llama3.2:3b"
             ""
         )
         return generate_response(last_user_msg, model)
+
 
 
 
