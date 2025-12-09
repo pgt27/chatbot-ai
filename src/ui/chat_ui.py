@@ -51,7 +51,6 @@ def apply_custom_styles():
     )
 
 def ui():
-    def ui():
     # HEADER VỚI STREAMLIT COMPONENTS - CÓ THỂ TƯƠNG TÁC
     col1, col2 = st.columns([4, 1])
     
@@ -164,5 +163,6 @@ def ui():
 def main_ui():
     apply_custom_styles()
     ui()
+
 
 
