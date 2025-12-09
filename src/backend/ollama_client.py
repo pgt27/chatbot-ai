@@ -3,6 +3,9 @@ import json
 from typing import List, Dict, Any, Optional
 import requests
 import ollama
+import threading
+import time
+import subprocess
 
 def _project_root() -> str:
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -50,55 +53,55 @@ def clear_history(filename: Optional[str] = None) -> None:
     except Exception:
         pass
 
-def generate_response_ollama(prompt: str, model: str = "llama3.2:3b") -> str:
-    try:
-        response = ollama.chat(
-            model=model,
-            messages=[
-                {
-                    'role': 'user',
-                    'content': prompt,
-                },
-            ]
-        )
-        return response['message']['content']
-    except Exception as e:
-        try:
-            url = "http://localhost:11434/api/generate"
-            data = {
-                "model": model,
-                "prompt": prompt,
-                "stream": False
-            }
-            response = requests.post(url, json=data, timeout=30)
-            if response.status_code == 200:
-                return response.json()["response"]
-            else:
-                return f"Lỗi kết nối Ollama: {response.status_code}"
-        except requests.exceptions.ConnectionError:
-            return "Không thể kết nối đến Ollama. Hãy chắc chắn rằng Ollama đang chạy (chạy lệnh 'ollama serve')"
-        except Exception as e2:
-            return f"Lỗi: {str(e2)}"
+env = os.environ.copy()
+env["OLLAMA_HOST"] = "0.0.0.0"
+env["OLLAMA_ORIGINS"] = "*"
 
-def generate_response_with_history(messages: List[Dict[str, str]], model: str = "llama3.2:3b") -> str:
+
+def run_ollama_serve():
+    """Chạy ollama serve ở thread riêng."""
+    subprocess.Popen(["ollama", "serve"], env=env)
+
+
+thread = threading.Thread(target=run_ollama_serve)
+thread.start()
+time.sleep(5)  
+
+PINGGY_URL = "http://tytji-34-124-205-38.a.free.pinggy.link"
+
+def generate_response(prompt: str, model: str = "llama3.2:3b") -> str:
+    """Gọi model qua API Pinggy."""
     try:
-        formatted_messages = []
-        for msg in messages:
-            formatted_messages.append({
-                'role': msg['role'],
-                'content': msg['content']
-            })
-        
+        url = f"{PINGGY_URL}/api/generate"
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "stream": False,
+        }
+        response = requests.post(url, json=payload, timeout=30)
+
+        if response.status_code == 200:
+            return response.json().get("response", "")
+        return f"Lỗi API: {response.status_code}"
+
+    except Exception as e:
+        return f"Lỗi kết nối: {str(e)}"
+
+def chat_with_history(messages: List[Dict[str, str]], model: str = "llama3.2:3b") -> str:
+    """Chat theo kiểu Ollama, nếu lỗi chuyển sang API Pinggy."""
+    try:
         response = ollama.chat(
             model=model,
-            messages=formatted_messages
+            messages=messages
         )
-        return response['message']['content']
-    except Exception as e:
-        if messages:
-            last_user_message = next((msg['content'] for msg in reversed(messages) if msg['role'] == 'user'), None)
-            if last_user_message:
-                return generate_response_ollama(last_user_message, model)
-        return "Xin lỗi, đã có lỗi xảy ra khi kết nối với AI."
+        return response["message"]["content"]
+
+    except Exception:
+        last_user_msg = next(
+            (m["content"] for m in reversed(messages) if m["role"] == "user"),
+            ""
+        )
+        return generate_response(last_user_msg, model)
+
 
 
