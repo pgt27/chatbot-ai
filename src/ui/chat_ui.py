@@ -1,11 +1,11 @@
 import streamlit as st
 import time
-from src.backend.ollama_client import load_messages, save_messages
-from src.backend.ollama_client import chat_with_history
+from src.backend.ollama_client import load_messages, save_messages, clear_chat
 
-def generate_ai_response(user_input: str) -> str:
-    return chat_with_history(st.session_state.messages)
-    
+def generate_ai_response(user_input):
+    from src.backend.ollama_client import generate_response_with_history
+    return generate_response_with_history(st.session_state.messages)
+
 def apply_custom_styles():
     st.markdown(
         f"""
@@ -28,15 +28,8 @@ def apply_custom_styles():
         .block-container {{ 
             padding-top: 0rem; padding-bottom: 0rem; 
         }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-def ui():
-    st.markdown(
-        f"""
-        <style>
+        
+        /* KHUNG CHAT TRẮNG VỚI HEADER XANH Ở TRÊN */
         .stApp {{
             width: 400px;
             height: 680px;
@@ -51,34 +44,108 @@ def ui():
             left: 50%;
             transform: translate(-50%, -50%);
         }}
-        </style>
-        <div style = "background: #004aad; color: white; padding: 10px 15px; border-radius: 30px 30px;">
-            <div style = "display: flex; justify-content: space-between; align-items: center;">
-                <span style = "font-size: 1.2em; font-weight: bold;">
-                    Thanh niên nghiêm túc
-                </span> 
-                <div>
-                    <span style = "margin-right: 15px; cursor: pointer;">
-                        &#8226; &#8226; &#8226;
-                    </span>
-                    <span style = "cursor: pointer;"> 
-                        &#x2715; 
-                    </span> 
-                </div>
-            </div>  
-        </div>
+        <style>
         """,
         unsafe_allow_html=True
     )
+
+def ui():
+    # HEADER VỚI STREAMLIT COMPONENTS - CÓ THỂ TƯƠNG TÁC
+    col1, col2 = st.columns([4, 1])
+    
+    with col1:
+        st.markdown(
+            """
+            <div style="background: #004aad; position: fixed; top: 10px; color: white; padding: 10px 15px; border-radius: 30px 30px 0 0;">
+                <span style="font-size: 1.2em; font-weight: bold;">
+                    Thanh niên nghiêm túc
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    
+    with col2:
+        # NÚT 3 CHẤM DÙNG STREAMLIT POPOVER - CÓ THỂ TƯƠNG TÁC
+        st.markdown(
+            """
+            <style>
+            /* Target the popover container */
+            div[data-testid="stPopover"] > div:first-child {
+                background-color: #004aad !important; /* Blue background */
+                border: 2px solid #004aad !important; /* Darker blue border */
+                position: fixed; 
+                top: 10px;
+                border-radius: 10px !important; /* Rounded corners */
+                color: white !important; /* White text color */
+            }
+            
+            /* Target all text inside popover */
+            div[data-testid="stPopover"] > div:first-child * {
+                color: white !important; /* Force white text for all elements */
+            }
+            
+            /* Target buttons inside popover */
+            div[data-testid="stPopover"] button {
+                background-color: rgba(0, 74, 173, 1) !important;
+                color: white !important;
+                border: 1px solid rgba(255,255,255,0.2) !important;
+            }
+            
+            div[data-testid="stPopover"] button:hover {
+                background-color: rgba(255,255,255,0.2) !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+        popover = st.popover("•••", help="Menu")
+        
+        with popover:        
+            # NÚT XÓA CHAT - CÓ THỂ BẤM ĐƯỢC
+            if st.button(
+                "🗑️ Xóa đoạn chat",
+                key="delete_chat_button",
+                use_container_width=True,
+                type="secondary"
+            ):
+                # Hiện xác nhận
+                if st.session_state.get("confirm_delete", False):
+                    clear_chat()
+                    st.session_state.confirm_delete = False
+                else:
+                    st.session_state.confirm_delete = True
+                    st.rerun()
+            
+            # Hiện thông báo xác nhận nếu cần
+            if st.session_state.get("confirm_delete", False):
+                st.warning("Bạn có chắc chắn muốn xóa?")
+                col_yes, col_no = st.columns(2)
+                with col_yes:
+                    if st.button("✅ Có", use_container_width=True):
+                        clear_chat()
+                with col_no:
+                    if st.button("❌ Không", use_container_width=True):
+                        st.session_state.confirm_delete = False
+                        st.rerun()
+    
+    # ========== CHAT CONTENT ==========
+    st.markdown('<div class="chat-content">', unsafe_allow_html=True)
+    
     if "messages" not in st.session_state:
         loaded = load_messages()
         if loaded:
             st.session_state["messages"] = loaded
         else:
             st.session_state["messages"] = [{"role": "ai", "content": "Có cần giúp gì hong?🥱"}]
+    
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # ========== CHAT INPUT ==========
     if prompt := st.chat_input("Nhắn tin cho Thanh niên nghiêm túc ..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         save_messages(st.session_state.messages)
@@ -90,9 +157,7 @@ def ui():
                 st.markdown(ai_response)
                 st.session_state.messages.append({"role": "ai", "content": ai_response})
                 save_messages(st.session_state.messages)
+
 def main_ui():
     apply_custom_styles()
     ui()
-
-
-
