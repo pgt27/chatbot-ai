@@ -1,3 +1,4 @@
+import streamlit as st
 import os
 import json
 from typing import List, Dict, Any, Optional
@@ -97,7 +98,7 @@ def ensure_model_available(model: str) -> bool:
         print("Lỗi ensure_model_available:", e)
         return False
         
-PINGGY_URL = "http://tytji-34-124-205-38.a.free.pinggy.link"
+PINGGY_URL = "http://jxcqk-2405-4802-a63b-1840-30f2-21fa-f37b-ed4e.a.free.pinggy.link/"
 DEFAULT_MODEL = "llama3.2:3b"
 ensure_model_available(DEFAULT_MODEL)
 
@@ -119,6 +120,12 @@ def generate_response(prompt: str, model: str = DEFAULT_MODEL) -> str:
         return f"Lỗi kết nối: {str(e)}"
 
 def chat_with_history(messages: List[Dict[str, str]], model: str = DEFAULT_MODEL) -> str:
+    last_user_msg = next(
+        (m["content"] for m in reversed(messages) if m["role"] == "user"),
+        ""
+    )
+
+    # Thử Local trước
     try:
         response = ollama.chat(
             model=model,
@@ -126,16 +133,12 @@ def chat_with_history(messages: List[Dict[str, str]], model: str = DEFAULT_MODEL
         )
         return response["message"]["content"]
 
-    except Exception:
-        last_user_msg = next(
-            (m["content"] for m in reversed(messages) if m["role"] == "user"),
-            ""
-        )
-        return generate_response(last_user_msg, model)
+    except Exception as e:
+        print("Local Ollama lỗi → fallback sang Pinggy:", e)
 
-
-
-
-
-
+        # Fallback sang Pinggy
+        try:
+            return generate_response(last_user_msg, model)
+        except Exception as e2:
+            return f"Lỗi toàn bộ hệ thống: {e2}"
 
