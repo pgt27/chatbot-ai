@@ -57,7 +57,6 @@ env = os.environ.copy()
 env["OLLAMA_HOST"] = "0.0.0.0"
 env["OLLAMA_ORIGINS"] = "*"
 
-
 def run_ollama_serve():
     subprocess.Popen(["ollama", "serve"], env=env)
 
@@ -65,9 +64,39 @@ thread = threading.Thread(target=run_ollama_serve)
 thread.start()
 time.sleep(5)  
 
-PINGGY_URL = "http://tytji-34-124-205-38.a.free.pinggy.link"
+def ensure_model_available(model: str) -> bool:
+    try:
+        tags = requests.get("http://localhost:11434/api/tags", timeout=5).json()
+        if model in [m["name"] for m in tags.get("models", [])]:
+            return True
 
-def generate_response(prompt: str, model: str = "llama3.2:3b") -> str:
+        resp = requests.post(
+            "http://localhost:11434/api/pull",
+            json={"name": model},
+            stream=True,
+            timeout=600
+        )
+
+        for line in resp.iter_lines():
+            if not line:
+                continue
+            data = json.loads(line.decode())
+
+            if data.get("status") == "success":
+                break
+
+        tags = requests.get("http://localhost:11434/api/tags", timeout=5).json()
+        return model in [m["name"] for m in tags.get("models", [])]
+
+    except Exception as e:
+        print("Lỗi ensure_model_available:", e)
+        return False
+        
+PINGGY_URL = "http://tytji-34-124-205-38.a.free.pinggy.link"
+DEFAULT_MODEL = "llama3.2:3b"
+ensure_model_available(DEFAULT_MODEL)
+
+def generate_response(prompt: str, model: str = DEFAULT_MODEL) -> str:
     try:
         url = f"{PINGGY_URL}/api/generate"
         payload = {
@@ -84,7 +113,7 @@ def generate_response(prompt: str, model: str = "llama3.2:3b") -> str:
     except Exception as e:
         return f"Lỗi kết nối: {str(e)}"
 
-def chat_with_history(messages: List[Dict[str, str]], model: str = "llama3.2:3b") -> str:
+def chat_with_history(messages: List[Dict[str, str]], model: str = "DEFAULT_MODEL) -> str:
     try:
         response = ollama.chat(
             model=model,
@@ -98,6 +127,7 @@ def chat_with_history(messages: List[Dict[str, str]], model: str = "llama3.2:3b"
             ""
         )
         return generate_response(last_user_msg, model)
+
 
 
 
