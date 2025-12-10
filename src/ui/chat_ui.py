@@ -35,7 +35,7 @@ def apply_custom_styles():
             width: 400px;
             height: 680px;
             background: #ffffff;
-            border-radius: 30px;
+            border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
             display: flex;
@@ -51,56 +51,73 @@ def apply_custom_styles():
     )
 
 def ui():
-    # HEADER VỚI STREAMLIT COMPONENTS - CÓ THỂ TƯƠNG TÁC
-    col1, col2 = st.columns([4, 1])
-    
-    with col1:
-        st.markdown(
-            """
-            <div style="background: #004aad; position: fixed; top: 10px; color: white; padding: 10px 15px; border-radius: 30px 30px 0 0;">
-                <span style="font-size: 1.2em; font-weight: bold;">
-                    Thanh niên nghiêm túc
-                </span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        # HEADER VỚI STREAMLIT COMPONENTS - CÓ THỂ TƯƠNG TÁC
+    header_container = st.container()
 
-    
-    with col2:
-        # NÚT 3 CHẤM DÙNG STREAMLIT POPOVER - CÓ THỂ TƯƠNG TÁC
+    with header_container :
+        b
+        st.markdown("""
+            < div style = "
+            position: fixed;          /* Cố định */
+        top: calc(50 % -340px);  /* Căn theo khung chat */
+        left: 50 %;               /* Căn giữa ngang */
+        transform: translateX(-50 %); /* Dịch về giữa */
+        width: 400px;            /* ← THÊM: Cùng chiều rộng khung chat */
+        background: #004aad;
+        color: white;
+        padding: 15px 20px;
+        border - radius: 20px 20px 0 0;
+        z - index: 100;           /* Tăng z-index */
+        box - sizing: border - box;  /* Quan trọng: tính cả padding trong width */
+        ">
+        < div style = "display: flex; justify-content: space-between; align-items: center;" >
+        <span style = "font-size: 1.2em; font-weight: bold;">
+        Thanh niên nghiêm túc
+        < / span>
+        < / div>
+        < / div>
+        """, unsafe_allow_html=True)
+
+        button_container = st.container()
+
+    with button_container :
         st.markdown(
+            
             """
-            <style>
+            < style >
             /* Target the popover container */
-            div[data-testid="stPopover"] > div:first-child {
-                background-color: #004aad !important; /* Blue background */
-                border: 2px solid #004aad !important; /* Darker blue border */
-                position: fixed; 
-                top: 10px;
-                border-radius: 10px !important; /* Rounded corners */
-                color: white !important; /* White text color */
-            }
-            
-            /* Target all text inside popover */
-            div[data-testid="stPopover"] > div:first-child * {
-                color: white !important; /* Force white text for all elements */
-            }
-            
-            /* Target buttons inside popover */
-            div[data-testid="stPopover"] button {
-                background-color: rgba(0, 74, 173, 1) !important;
-                color: white !important;
-                border: 1px solid rgba(255,255,255,0.2) !important;
-            }
-            
-            div[data-testid="stPopover"] button:hover {
-                background-color: rgba(255,255,255,0.2) !important;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True,
+            div[data - testid = "stPopover"] > div:first - child{
+            background - color: #004aad !important; /* Blue background */
+            border: 2px solid #004aad !important; /* Darker blue border */
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            z - index: 200;
+            border - radius: 10px !important; /* Rounded corners */
+            color: white !important; /* White text color */
+        }
+
+        /* Target all text inside popover */
+        div[data - testid = "stPopover"] > div:first - child* {
+            color: white !important; /* Force white text for all elements */
+        }
+
+        /* Target buttons inside popover */
+        div[data - testid = "stPopover"] button{
+            background - color: rgba(0, 74, 173, 1) !important;
+            color: white !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+        }
+
+        div[data - testid = "stPopover"] button:hover{
+            background - color: rgba(255,255,255,0.2) !important;
+        }
+        < / style>
+        """,
+        unsafe_allow_html = True,
         )
+    # NÚT 3 CHẤM DÙNG STREAMLIT POPOVER - CÓ THỂ TƯƠNG TÁC
+  
         popover = st.popover("•••", help="Menu")
         
         with popover:        
@@ -163,6 +180,7 @@ def ui():
 def main_ui():
     apply_custom_styles()
     ui()
+
 
 
 
