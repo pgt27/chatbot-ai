@@ -150,36 +150,37 @@ def ui():
     
     # ========== CHAT CONTENT ==========
     st.markdown('<div class="chat-content">', unsafe_allow_html=True)
-    
-    if "messages" not in st.session_state:
-        loaded = load_messages()
-        if loaded:
-            st.session_state["messages"] = loaded
-        else:
-            st.session_state["messages"] = [{"role": "ai", "content": "Có cần giúp gì hong?🥱"}]
-    
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+
+if "messages" not in st.session_state:
+    loaded = load_messages()
+    if loaded:
+        st.session_state["messages"] = loaded
+    else:
+        st.session_state["messages"] = [{"role": "assistant", "content": "Tôi cho phép em đặt câu hỏi 🥱"}]
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+st.markdown('</div>', unsafe_allow_html=True)
     
     # ========== CHAT INPUT ==========
-    if prompt := st.chat_input("Nhắn tin cho Thanh niên nghiêm túc ..."):
+    f prompt := st.chat_input("Nhắn tin cho Thanh niên nghiêm túc ..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         save_messages(st.session_state.messages)
         with st.chat_message("user"):
             st.markdown(prompt)
-        with st.chat_message("ai"):
+        with st.chat_message("assistant"):
             with st.spinner("Thanh niên đang si nghĩ..."):
-                ai_response = generate_ai_response(prompt)
+                ai_response = ollama_chat(st.session_state.messages)
                 st.markdown(ai_response)
-                st.session_state.messages.append({"role": "ai", "content": ai_response})
+                st.session_state.messages.append({"role": "assistant", "content": ai_response})
                 save_messages(st.session_state.messages)
 
 def main_ui():
     apply_custom_styles()
     ui()
+
 
 
 
