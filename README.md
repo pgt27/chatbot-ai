@@ -2,7 +2,7 @@
 1) Upload the file 2A_ollama_pinggy_ngrok.ipynb to Google Colab and run all cells.
 2) Create a Colab Secret with: (Name: NGROK_API_KEY / Value: your Ngrok API key.)
 3) After the notebook finishes running, locate the line: * ngrok tunnel https://......ngrok-free.dev -> http://127.0.0.1:11434
-4) Copy the Ngrok URL (e.g. https://phillis-jasperated-inexplicitly.ngrok-free.dev) and assign it to: https://phillis-jasperated-inexplicitly.ngrok-free.dev and paste to NGROK_URL = "...."
+4) Copy the Ngrok URL (e.g. https://......ngrok-free.dev) and assign it to NGROK_URL = "...."
 5) Run the application code to start the chatbot.
 
 
