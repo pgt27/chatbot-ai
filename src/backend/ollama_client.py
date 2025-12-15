@@ -1,4 +1,4 @@
-mport streamlit as st
+import streamlit as st
 import os
 import json
 from typing import List, Dict, Any, Optional
@@ -67,5 +67,6 @@ def ollama_chat(history_messages: List[Dict[str, str]]) -> str:
         messages=list(history_messages)
     )
     return response["message"]["content"]
+
 
 
