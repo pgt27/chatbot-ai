@@ -59,86 +59,13 @@ def clear_history(filename: Optional[str] = None) -> None:
     except Exception:
         pass
 
-env = os.environ.copy()
-env["OLLAMA_HOST"] = "0.0.0.0"
-env["OLLAMA_ORIGINS"] = "*"
-
-def run_ollama_serve():
-    subprocess.Popen(["ollama", "serve"], env=env)
-
-thread = threading.Thread(target=run_ollama_serve)
-thread.start()
-time.sleep(5)  
-
-def ensure_model_available(model: str) -> bool:
-    try:
-        tags = requests.get("http://localhost:11434/api/tags", timeout=5).json()
-        if model in [m["name"] for m in tags.get("models", [])]:
-            return True
-
-        resp = requests.post(
-            "http://localhost:11434/api/pull",
-            json={"name": model},
-            stream=True,
-            timeout=600
-        )
-
-        for line in resp.iter_lines():
-            if not line:
-                continue
-            data = json.loads(line.decode())
-
-            if data.get("status") == "success":
-                break
-
-        tags = requests.get("http://localhost:11434/api/tags", timeout=5).json()
-        return model in [m["name"] for m in tags.get("models", [])]
-
-    except Exception as e:
-        print("Lỗi ensure_model_available:", e)
-        return False
-        
-PINGGY_URL = "http://jxcqk-2405-4802-a63b-1840-30f2-21fa-f37b-ed4e.a.free.pinggy.link/"
-DEFAULT_MODEL = "llama3.2:3b"
-ensure_model_available(DEFAULT_MODEL)
-
-def generate_response(prompt: str, model: str = DEFAULT_MODEL) -> str:
-    try:
-        url = f"{PINGGY_URL}/api/generate"
-        payload = {
-            "model": model,
-            "prompt": prompt,
-            "stream": False,
-        }
-        response = requests.post(url, json=payload, timeout=30)
-
-        if response.status_code == 200:
-            return response.json().get("response", "")
-        return f"Lỗi API: {response.status_code}"
-
-    except Exception as e:
-        return f"Lỗi kết nối: {str(e)}"
-
-def chat_with_history(messages: List[Dict[str, str]], model: str = DEFAULT_MODEL) -> str:
-    last_user_msg = next(
-        (m["content"] for m in reversed(messages) if m["role"] == "user"),
-        ""
+MODEL = "llama3.2:3b"
+NGROK_URL = "https://phillis-jasperated-inexplicitly.ngrok-free.dev"
+client = Client(host=NGROK_URL)
+def ollama_chat(history_messages: List[Dict[str, str]]) -> str:
+    response = client.chat(
+        model=MODEL,
+        messages=list(history_messages)
     )
-
-    # Thử Local trước
-    try:
-        response = ollama.chat(
-            model=model,
-            messages=messages
-        )
-        return response["message"]["content"]
-
-    except Exception as e:
-        print("Local Ollama lỗi → fallback sang Pinggy:", e)
-
-        # Fallback sang Pinggy
-        try:
-            return generate_response(last_user_msg, model)
-        except Exception as e2:
-            return f"Lỗi toàn bộ hệ thống: {e2}"
+    return response["message"]["content"]
 
