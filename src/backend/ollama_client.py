@@ -1,12 +1,11 @@
-import streamlit as st
+mport streamlit as st
 import os
 import json
 from typing import List, Dict, Any, Optional
 import requests
-import ollama
-import threading
-import time
-import subprocess
+from ollama import Client
+from collections import deque
+
 
 def _project_root() -> str:
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -68,4 +67,5 @@ def ollama_chat(history_messages: List[Dict[str, str]]) -> str:
         messages=list(history_messages)
     )
     return response["message"]["content"]
+
 
