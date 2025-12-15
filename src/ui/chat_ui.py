@@ -3,6 +3,10 @@ import time
 from src.backend.ollama_client import load_messages, save_messages, clear_chat
 from src.backend.ollama_client import ollama_chat
 
+def generate_ai_response(user_input: str) -> str:
+    # st.session_state.messages.append({"role": "user", "content": user_input})
+    return chat_with_history(st.session_state.messages)
+
 def apply_custom_styles():
     st.markdown(
         f"""
@@ -41,79 +45,123 @@ def apply_custom_styles():
             left: 50%;
             transform: translate(-50%, -50%);
         }}
+         /* CSS cho tin nhắn người dùng */
+        [data-testid="stChatMessageContent"] p {{
+            color: black !important;
+        }}
+        
+        /* Hoặc cụ thể hơn cho user message */
+        div[data-testid="stChatMessage"][data-message-author="user"] 
+        [data-testid="stChatMessageContent"] p {{
+            color: #000000 !important;
+            font-weight: 500;
+        }}
+        
+        /* CSS cho tin nhắn AI (tuỳ chọn) */
+        div[data-testid="stChatMessage"][data-message-author="assistant"] 
+        [data-testid="stChatMessageContent"] p {{
+            color: #333333 !important;
+        }}     
+
         <style>
+        """,
+        unsafe_allow_html=True
+    )
+    # Sửa hiện chữ màu đen trong chatbot
+    st.markdown(
+        """
+        <style> 
+        .stChatMessage * {
+            color: #000000 !important;
+        }
+        div[data-testid="stChatMessage"],
+        div[data-testid="stChatMessage"] *,
+        div[data-testid="stChatMessageContent"],
+        div[data-testid="stChatMessageContent"] *,
+        .stChatMessage p,
+        .stChatMessage span,
+        .stChatMessage div {
+            color: #000000 !important;
+        }
+        .stSpinner,
+        .stSpinner * {
+            color: #000000 !important;
+        }
+        .st-emotion-cache-1wrcr25,
+        .st-emotion-cache-16idsys,
+        .st-emotion-cache-1inivcz {
+            color: #000000 !important;
+        }
+        </style>
         """,
         unsafe_allow_html=True
     )
 
 def ui():
-        # HEADER VỚI STREAMLIT COMPONENTS - CÓ THỂ TƯƠNG TÁC
+    # HEADER VỚI STREAMLIT COMPONENTS - CÓ THỂ TƯƠNG TÁC
     header_container = st.container()
-
-    with header_container :
-        b
+    
+    with header_container:
         st.markdown("""
-            < div style = "
+        <div style="
             position: fixed;          /* Cố định */
-        top: calc(50 % -340px);  /* Căn theo khung chat */
-        left: 50 %;               /* Căn giữa ngang */
-        transform: translateX(-50 %); /* Dịch về giữa */
-        width: 400px;            /* ← THÊM: Cùng chiều rộng khung chat */
-        background: #004aad;
-        color: white;
-        padding: 15px 20px;
-        border - radius: 20px 20px 0 0;
-        z - index: 100;           /* Tăng z-index */
-        box - sizing: border - box;  /* Quan trọng: tính cả padding trong width */
+            top: calc(50% - 340px);  /* Căn theo khung chat */
+            left: 50%;               /* Căn giữa ngang */
+            transform: translateX(-50%); /* Dịch về giữa */
+            width: 400px;            /* ← THÊM: Cùng chiều rộng khung chat */
+            background: #004aad;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 20px 20px 0 0;
+            z-index: 100;           /* Tăng z-index */
+            box-sizing: border-box;  /* Quan trọng: tính cả padding trong width */
         ">
-        < div style = "display: flex; justify-content: space-between; align-items: center;" >
-        <span style = "font-size: 1.2em; font-weight: bold;">
-        Thanh niên nghiêm túc
-        < / span>
-        < / div>
-        < / div>
-        """, unsafe_allow_html=True)
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 1.2em; font-weight: bold;">
+                    Thanh niên nghiêm túc
+                </span>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
-        button_container = st.container()
+    button_container = st.container()
 
-    with button_container :
+    with button_container:
         st.markdown(
-            
-            """
-            < style >
-            /* Target the popover container */
-            div[data - testid = "stPopover"] > div:first - child{
-            background - color: #004aad !important; /* Blue background */
+        """
+        <style>
+        /* Target the popover container */
+        div[data-testid="stPopover"] > div:first-child {
+            background-color: #004aad !important; /* Blue background */
             border: 2px solid #004aad !important; /* Darker blue border */
-            position: fixed;
+            position: fixed; 
             top: 10px;
             right: 20px;
-            z - index: 200;
-            border - radius: 10px !important; /* Rounded corners */
+            z-index: 200;
+            border-radius: 10px !important; /* Rounded corners */
             color: white !important; /* White text color */
         }
-
+        
         /* Target all text inside popover */
-        div[data - testid = "stPopover"] > div:first - child* {
+        div[data-testid="stPopover"] > div:first-child * {
             color: white !important; /* Force white text for all elements */
         }
-
+        
         /* Target buttons inside popover */
-        div[data - testid = "stPopover"] button{
-            background - color: rgba(0, 74, 173, 1) !important;
+        div[data-testid="stPopover"] button {
+            background-color: rgba(0, 74, 173, 1) !important;
             color: white !important;
             border: 1px solid rgba(255,255,255,0.2) !important;
         }
-
-        div[data - testid = "stPopover"] button:hover{
-            background - color: rgba(255,255,255,0.2) !important;
+        
+        div[data-testid="stPopover"] button:hover {
+            background-color: rgba(255,255,255,0.2) !important;
         }
-        < / style>
+        </style>
         """,
-        unsafe_allow_html = True,
+        unsafe_allow_html=True,
         )
-    # NÚT 3 CHẤM DÙNG STREAMLIT POPOVER - CÓ THỂ TƯƠNG TÁC
-  
+        # NÚT 3 CHẤM DÙNG STREAMLIT POPOVER - CÓ THỂ TƯƠNG TÁC
         popover = st.popover("•••", help="Menu")
         
         with popover:        
@@ -143,25 +191,26 @@ def ui():
                     if st.button("❌ Không", use_container_width=True):
                         st.session_state.confirm_delete = False
                         st.rerun()
-    
+
     # ========== CHAT CONTENT ==========
     st.markdown('<div class="chat-content">', unsafe_allow_html=True)
-
-if "messages" not in st.session_state:
-    loaded = load_messages()
-    if loaded:
-        st.session_state["messages"] = loaded
-    else:
-        st.session_state["messages"] = [{"role": "assistant", "content": "Tôi cho phép em đặt câu hỏi 🥱"}]
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-st.markdown('</div>', unsafe_allow_html=True)
+    
+    if "messages" not in st.session_state:
+        loaded = load_messages()
+        if loaded:
+            st.session_state["messages"] = loaded
+        else:
+            st.session_state["messages"] = [{"role": "assistant", "content": "Tôi cho phép em đặt câu hỏi 🥱"}]
+    
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
     
     # ========== CHAT INPUT ==========
-    f prompt := st.chat_input("Nhắn tin cho Thanh niên nghiêm túc ..."):
+    if prompt := st.chat_input("Nhắn tin cho Thanh niên nghiêm túc ..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         save_messages(st.session_state.messages)
         with st.chat_message("user"):
@@ -176,9 +225,3 @@ st.markdown('</div>', unsafe_allow_html=True)
 def main_ui():
     apply_custom_styles()
     ui()
-
-
-
-
-
-
