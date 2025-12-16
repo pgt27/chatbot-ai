@@ -2,6 +2,98 @@ import streamlit as st
 import time
 from src.backend.ollama_client import load_messages, save_messages, clear_chat
 from src.backend.ollama_client import ollama_chat
+from typing import List, Dict, Any, Optional
+
+# HÀM MỚI: Khởi tạo session state
+def initialize_session_state():
+    """Khởi tạo tất cả session state - LUÔN VÀO chat_history_1.json ĐẦU TIÊN"""
+    # DANH SÁCH CONVERSATIONS
+    if "conversations" not in st.session_state:
+        conversations = []
+        
+        # ===== LUÔN ƯU TIÊN chat_history_1.json ĐẦU TIÊN =====
+        # 1. Thử load chat_history_1.json trước
+        messages_1 = load_messages("chat_history_1.json")
+        
+        if messages_1:
+            # Có file chat_history_1.json → tạo conversation 1
+            conversations.append({
+                "id": 1,
+                "name": "Thanh niên nghiêm túc",
+                "messages": messages_1,
+                "active": True  # LUÔN ACTIVE KHI MỞ APP
+            })
+        else:
+            # Không có file → tạo mới conversation 1
+            conversations.append({
+                "id": 1,
+                "name": "Thanh niên nghiêm túc",
+                "messages": [{"role": "ai", "content": "Có cần giúp gì hong?🥱"}],
+                "active": True  # LUÔN ACTIVE KHI MỞ APP
+            })
+            # Lưu file chat_history_1.json ngay
+            save_messages(conversations[0]["messages"], "chat_history_1.json")
+        
+        # 2. Load các conversation khác (2, 3, ...) nếu có
+        import os, glob
+        from src.backend.ollama_client import history_path
+        
+        chat_files = glob.glob(history_path("chat_history_*.json"))
+        for filepath in chat_files:
+            filename = os.path.basename(filepath)
+            # Bỏ qua chat_history_1.json (đã xử lý ở trên)
+            if filename == "chat_history_1.json":
+                continue
+            
+            try:
+                # Lấy ID từ filename
+                conv_id = int(filename.replace("chat_history_", "").replace(".json", ""))
+                
+                # Chỉ load nếu ID > 1
+                if conv_id > 1:
+                    messages = load_messages(filename)
+                    if messages:
+                        conversations.append({
+                            "id": conv_id,
+                            "name": f"Thanh niên nghiêm túc {conv_id}",
+                            "messages": messages,
+                            "active": False  # KHÔNG ACTIVE
+                        })
+            except:
+                continue
+        
+        # Sắp xếp theo ID
+        conversations.sort(key=lambda x: x["id"])
+        
+        st.session_state.conversations = conversations
+        st.session_state.current_conversation_id = 1  # LUÔN LÀ 1
+    
+    # ID CHO CONVERSATION TIẾP THEO
+    if "next_conversation_id" not in st.session_state:
+        max_id = max([conv["id"] for conv in st.session_state.conversations]) if st.session_state.conversations else 0
+        st.session_state.next_conversation_id = max_id + 1
+    
+    # CÁC STATE KHÁC
+    if "show_conversation_list" not in st.session_state:
+        st.session_state.show_conversation_list = False
+    
+    if "confirm_delete" not in st.session_state:
+        st.session_state.confirm_delete = False
+    
+    if "delete_conv_id" not in st.session_state:
+        st.session_state.delete_conv_id = None
+
+# HÀM MỚI: Lưu conversation ra file riêng
+def save_conversation_to_file(conversation_id: int, messages: List[Dict]):
+    """Lưu tin nhắn của conversation ra file riêng"""
+    filename = f"chat_history_{conversation_id}.json"
+    save_messages(messages, filename)
+
+# HÀM MỚI: Load conversation từ file
+def load_conversation_from_file(conversation_id: int) -> List[Dict]:
+    """Load tin nhắn của conversation từ file riêng"""
+    filename = f"chat_history_{conversation_id}.json"
+    return load_messages(filename)
 
 
 def apply_custom_styles():
@@ -42,29 +134,28 @@ def apply_custom_styles():
             left: 50%;
             transform: translate(-50%, -50%);
         }}
-         /* CSS cho tin nhắn người dùng */
+        
+        /* CSS cho tin nhắn */
         [data-testid="stChatMessageContent"] p {{
             color: black !important;
         }}
         
-        /* Hoặc cụ thể hơn cho user message */
         div[data-testid="stChatMessage"][data-message-author="user"] 
         [data-testid="stChatMessageContent"] p {{
             color: #000000 !important;
             font-weight: 500;
         }}
         
-        /* CSS cho tin nhắn AI (tuỳ chọn) */
         div[data-testid="stChatMessage"][data-message-author="assistant"] 
         [data-testid="stChatMessageContent"] p {{
             color: #333333 !important;
-        }}     
-
-        <style>
+        }}
+        </style>
         """,
         unsafe_allow_html=True
     )
-    # Sửa hiện chữ màu đen trong chatbot
+    
+    # CSS cho màu chữ đen
     st.markdown(
         """
         <style> 
@@ -84,43 +175,60 @@ def apply_custom_styles():
         .stSpinner * {
             color: #000000 !important;
         }
-        .st-emotion-cache-1wrcr25,
-        .st-emotion-cache-16idsys,
-        .st-emotion-cache-1inivcz {
-            color: #000000 !important;
-        }
         </style>
         """,
         unsafe_allow_html=True
     )
 
 def ui():
-    # HEADER VỚI STREAMLIT COMPONENTS - CÓ THỂ TƯƠNG TÁC
+    # KHỞI TẠO SESSION STATE TRƯỚC
+    initialize_session_state()
+    
+    # TÌM CONVERSATION ĐANG ACTIVE VÀ LẤY MESSAGES CỦA NÓ
+    current_messages = []
+    for conv in st.session_state.conversations:
+        if conv["active"]:
+            current_messages = conv["messages"]
+            break
+    
+    # NẾU KHÔNG TÌM THẤY, DÙNG MESSAGES MẶC ĐỊNH
+    if not current_messages:
+        current_messages = [{"role": "ai", "content": "Có cần giúp gì hong?🥱"}]
+    
+    # ========== HEADER VỚI TÊN CONVERSATION HIỆN TẠI ==========
     header_container = st.container()
     
     with header_container:
-        st.markdown("""
+        # Tìm conversation đang active
+        current_conv_name = "Thanh niên nghiêm túc"
+        for conv in st.session_state.conversations:
+            if conv["active"]:
+                current_conv_name = conv["name"]
+                break
+        
+        st.markdown(f"""
         <div style="
-            position: fixed;          /* Cố định */
-            top: calc(50% - 340px);  /* Căn theo khung chat */
-            left: 50%;               /* Căn giữa ngang */
-            transform: translateX(-50%); /* Dịch về giữa */
-            width: 400px;            /* ← THÊM: Cùng chiều rộng khung chat */
+            position: fixed;
+            top: calc(50% - 340px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
             background: #004aad;
             color: white;
             padding: 15px 20px;
             border-radius: 20px 20px 0 0;
-            z-index: 100;           /* Tăng z-index */
-            box-sizing: border-box;  /* Quan trọng: tính cả padding trong width */
+            z-index: 100;
+            box-sizing: border-box;
         ">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 1.2em; font-weight: bold;">
-                    Thanh niên nghiêm túc
+                    {current_conv_name}
                 </span>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
+    # ========== POPOVER MENU ==========
     button_container = st.container()
 
     with button_container:
@@ -129,19 +237,19 @@ def ui():
         <style>
         /* Target the popover container */
         div[data-testid="stPopover"] > div:first-child {
-            background-color: #004aad !important; /* Blue background */
-            border: 2px solid #004aad !important; /* Darker blue border */
+            background-color: #004aad !important;
+            border: 2px solid #004aad !important;
             position: fixed; 
             top: 10px;
             right: 20px;
             z-index: 200;
-            border-radius: 10px !important; /* Rounded corners */
-            color: white !important; /* White text color */
+            border-radius: 10px !important;
+            color: white !important;
         }
         
         /* Target all text inside popover */
         div[data-testid="stPopover"] > div:first-child * {
-            color: white !important; /* Force white text for all elements */
+            color: white !important;
         }
         
         /* Target buttons inside popover */
@@ -158,68 +266,230 @@ def ui():
         """,
         unsafe_allow_html=True,
         )
-        # NÚT 3 CHẤM DÙNG STREAMLIT POPOVER - CÓ THỂ TƯƠNG TÁC
+        
+        # NÚT 3 CHẤM DÙNG STREAMLIT POPOVER
         popover = st.popover("•••", help="Menu")
         
-        with popover:        
-            # NÚT XÓA CHAT - CÓ THỂ BẤM ĐƯỢC
+        with popover:
+            # ========== XÓA ĐOẠN CHAT HIỆN TẠI ==========
             if st.button(
                 "🗑️ Xóa đoạn chat",
                 key="delete_chat_button",
                 use_container_width=True,
                 type="secondary"
             ):
-                # Hiện xác nhận
+                # Nếu đang hiện confirm, BẤM LẦN 2 SẼ TẮT
                 if st.session_state.get("confirm_delete", False):
-                    clear_chat()
+                    # BẤM LẦN 2: TẮT CONFIRM
                     st.session_state.confirm_delete = False
                 else:
+                    # BẤM LẦN 1: BẬT CONFIRM
                     st.session_state.confirm_delete = True
-                    st.rerun()
+                st.rerun()
             
-            # Hiện thông báo xác nhận nếu cần
+            # HIỆN THÔNG BÁO XÁC NHẬN NẾU confirm_delete = True
             if st.session_state.get("confirm_delete", False):
                 st.warning("Bạn có chắc chắn muốn xóa?")
+                
+                # Cột CÓ - thực hiện xóa
                 col_yes, col_no = st.columns(2)
                 with col_yes:
-                    if st.button("✅ Có", use_container_width=True):
-                        clear_chat()
-                with col_no:
-                    if st.button("❌ Không", use_container_width=True):
+                    if st.button("✅ Có", use_container_width=True, key="confirm_yes"):
+                        # GỌI HÀM XÓA
+                        clear_chat()  # Hoặc clear_current_conversation()
+                        # TẮT CONFIRM SAU KHI XÓA
                         st.session_state.confirm_delete = False
                         st.rerun()
+                
+                # Cột KHÔNG - hủy bỏ
+                with col_no:
+                    if st.button("❌ Không", use_container_width=True, key="confirm_no"):
+                        # TẮT CONFIRM
+                        st.session_state.confirm_delete = False
+                        st.rerun()
+            # ========== TẠO CUỘC HỘI THOẠI MỚI ==========
+            if st.button(
+                "➕ Tạo hội thoại mới",
+                key="new_conversation_button",
+                use_container_width=True,
+                type="secondary"
+            ):
+                # TÌM ID TRỐNG NHỎ NHẤT (thay vì next_conversation_id)
+                existing_ids = {conv["id"] for conv in st.session_state.conversations}
+                
+                # Tìm ID trống từ 2 trở lên (giữ conversation 1 cố định)
+                new_id = 2
+                while new_id in existing_ids:
+                    new_id += 1
+                
+                new_name = f"Thanh niên nghiêm túc {new_id}"
+                
+                # Tắt active của tất cả conversations cũ
+                for conv in st.session_state.conversations:
+                    conv["active"] = False
+                
+                # Thêm conversation mới
+                new_conversation = {
+                    "id": new_id,
+                    "name": new_name,
+                    "messages": [{"role": "ai", "content": "Có cần giúp gì hong?🥱"}],
+                    "active": True
+                }
+                
+                st.session_state.conversations.append(new_conversation)
+                st.session_state.current_conversation_id = new_id
+                
+                # Lưu file mới
+                save_conversation_to_file(new_id, new_conversation["messages"])
+                
+                st.toast(f"Đã tạo: {new_name} 🎉", icon="✅")
+                st.rerun()
+            
+            # ========== DANH SÁCH ĐOẠN CHAT (TOGGLE) ==========
+            if st.button(
+                "📋 Danh sách đoạn chat",
+                key="list_conversations_button", 
+                use_container_width=True,
+                type="secondary"
+            ):
+                # Toggle hiển thị danh sách
+                st.session_state.show_conversation_list = not st.session_state.show_conversation_list
+                st.rerun()
+            
+            # HIỂN THỊ DANH SÁCH CHUYỂN ĐẾN NẾU ĐANG BẬT
+            if st.session_state.show_conversation_list:
+                st.markdown("*Chuyển đến:*")
+                
+                for conv in st.session_state.conversations:
+                    # Tạo row với 2 cột: nút chuyển và nút xóa
+                    col_switch, col_delete = st.columns([4, 1])
+                    
+                    with col_switch:
+                        # Nút chuyển đến conversation
+                        if st.button(
+                            f"{'🔵 ' if conv['active'] else '⚪ '}{conv['name']}",
+                            key=f"switch_to_{conv['id']}",
+                            use_container_width=True,
+                            type="secondary" if not conv['active'] else "primary"
+                        ):
+                            # Tắt active của tất cả
+                            for c in st.session_state.conversations:
+                                c["active"] = False
+                            
+                            # Bật active cho conversation được chọn
+                            conv["active"] = True
+                            st.session_state.current_conversation_id = conv["id"]
+                            st.session_state.messages = conv["messages"]
+                            st.session_state.show_conversation_list = False
+                            st.rerun()
+                    
+                    with col_delete:
+                        # Nút xóa conversation - chỉ hiện nếu không phải conversation cuối cùng
+                        if len(st.session_state.conversations) > 1:
+                            if st.button(
+                                "🗑️",
+                                key=f"delete_conv_{conv['id']}",
+                                help=f"Xóa {conv['name']}",
+                                type="secondary"
+                            ):
+                                st.session_state.delete_conv_id = conv["id"]
+                                st.rerun()
+                        else:
+                            st.empty()
+                
+                # XỬ LÝ XÓA CONVERSATION NẾU CÓ
+                if st.session_state.delete_conv_id is not None:
+                    conv_to_delete = None
+                    for conv in st.session_state.conversations:
+                        if conv["id"] == st.session_state.delete_conv_id:
+                            conv_to_delete = conv
+                            break
+                    
+                    if conv_to_delete:
+                        st.divider()
+                        st.warning(f"Xóa hoàn toàn '{conv_to_delete['name']}'?")
+                        col_yes, col_no = st.columns(2)
+                        
+                        with col_yes:
+                            if st.button("✅ Xóa vĩnh viễn", key="confirm_delete_conv", type="primary"):
+                                # 1. Xóa conversation
+                                st.session_state.conversations = [
+                                    c for c in st.session_state.conversations 
+                                    if c["id"] != st.session_state.delete_conv_id
+                                ]
+                                
+                                # 2. Xóa file
+                                import os
+                                from src.backend.ollama_client import history_path
+                                filename = f"chat_history_{st.session_state.delete_conv_id}.json"
+                                filepath = history_path(filename)
+                                if os.path.exists(filepath):
+                                    os.remove(filepath)
+                                
+                                # 3. Nếu xóa conversation đang active
+                                if conv_to_delete["active"] and st.session_state.conversations:
+                                    st.session_state.conversations[0]["active"] = True
+                                    st.session_state.current_conversation_id = st.session_state.conversations[0]["id"]
+                                    st.session_state.messages = st.session_state.conversations[0]["messages"]
+                                
+                                # 4. KHÔNG CẦN CẬP NHẬT next_conversation_id nữa
+                                # ID mới sẽ được tìm tự động
+                                
+                                st.session_state.delete_conv_id = None
+                                st.toast(f"Đã xóa: {conv_to_delete['name']}", icon="🗑️")
+                                st.rerun()
+                        
+                        with col_no:
+                            if st.button(
+                                "❌ Hủy bỏ", 
+                                key="cancel_delete_conv",
+                                use_container_width=True
+                            ):
+                                st.session_state.delete_conv_id = None
+                                st.rerun()  
 
     # ========== CHAT CONTENT ==========
     st.markdown('<div class="chat-content">', unsafe_allow_html=True)
     
-    if "messages" not in st.session_state:
-        loaded = load_messages()
-        if loaded:
-            st.session_state["messages"] = loaded
-        else:
-            st.session_state["messages"] = [{"role": "assistant", "content": "Tôi cho phép em đặt câu hỏi 🥱"}]
-    
-    for message in st.session_state.messages:
+    # HIỂN THỊ MESSAGES CỦA CONVERSATION HIỆN TẠI
+    for message in current_messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    
     # ========== CHAT INPUT ==========
     if prompt := st.chat_input("Nhắn tin cho Thanh niên nghiêm túc ..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        save_messages(st.session_state.messages)
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        with st.chat_message("assistant"):
-            with st.spinner("Thanh niên đang si nghĩ..."):
-                ai_response = ollama_chat(st.session_state.messages)
-                st.markdown(ai_response)
-                st.session_state.messages.append({"role": "assistant", "content": ai_response})
-                save_messages(st.session_state.messages)
+        # TÌM VÀ CẬP NHẬT CONVERSATION ĐANG ACTIVE
+        active_conv = None
+        for conv in st.session_state.conversations:
+            if conv["active"]:
+                active_conv = conv
+                break
+        
+        if active_conv:
+            # 1. THÊM USER MESSAGE VÀO CONVERSATION
+            active_conv["messages"].append({"role": "user", "content": prompt})
+            
+            # 2. HIỂN THỊ USER MESSAGE
+            with st.chat_message("user"):
+                st.markdown(prompt)
+            
+            # 3. LẤY AI RESPONSE (dùng messages của conversation này)
+            with st.chat_message("ai"):
+                with st.spinner("Thanh niên đang si nghĩ..."):
+                    ai_response = ollama_chat(active_conv["messages"])
+                    st.markdown(ai_response)
+            
+            # 4. THÊM AI RESPONSE VÀO CONVERSATION
+            active_conv["messages"].append({"role": "ai", "content": ai_response})
+            
+            # 5. LƯU CONVERSATION RA FILE RIÊNG
+            save_conversation_to_file(active_conv["id"], active_conv["messages"])
+            
+            # 6. KHÔNG CẦN CẬP NHẬT st.session_state.messages
+            st.rerun()
 
 def main_ui():
     apply_custom_styles()
     ui()
-
