@@ -493,3 +493,4 @@ def ui():
 def main_ui():
     apply_custom_styles()
     ui()
+
