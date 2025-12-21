@@ -65,8 +65,6 @@ def clear_chat():
         # FALLBACK: DÙNG LOGIC CŨ
         st.session_state.messages = [{"role": "ai", "content": "Có cần giúp gì hong?🥱"}]
         save_messages(st.session_state.messages)
-    
-    st.rerun()
 
 def get_conversation_filename(conversation_id: int) -> str:
     """Tạo filename cho conversation"""
@@ -91,3 +89,4 @@ def ollama_chat(history_messages: List[Dict[str, str]]) -> str:
         messages=list(history_messages)
     )
     return response["message"]["content"]
+
