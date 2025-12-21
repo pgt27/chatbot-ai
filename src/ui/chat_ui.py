@@ -279,7 +279,7 @@ def ui():
                 type="secondary"
             ):
                 # Nếu đang hiện confirm, BẤM LẦN 2 SẼ TẮT
-                if st.session_state.get("confirm_delete", False):
+                if st.session_state.get("confirm_delete", True):
                     # BẤM LẦN 2: TẮT CONFIRM
                     st.session_state.confirm_delete = False
                 else:
@@ -288,7 +288,7 @@ def ui():
                 st.rerun()
             
             # HIỆN THÔNG BÁO XÁC NHẬN NẾU confirm_delete = True
-            if st.session_state.get("confirm_delete", False):
+            if st.session_state.get("confirm_delete", True):
                 st.warning("Bạn có chắc chắn muốn xóa?")
                 
                 # Cột CÓ - thực hiện xóa
@@ -493,4 +493,5 @@ def ui():
 def main_ui():
     apply_custom_styles()
     ui()
+
 
