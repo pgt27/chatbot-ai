@@ -15,14 +15,13 @@ Dự án này xây dựng một Chatbot AI có giao diện trực quan, hỗ tr�
 ### Bước 1: Tạo Ngrok API Key trên Colab
 * Truy cập Google Colab → Secrets (biểu tượng 🔑 bên trái).
 * Tạo một Secret mới với:
-** **Name:** NGROK_API_KEY
-** **Value:** Ngrok API key của bạn
+     * **Name:** NGROK_API_KEY
+     * **Value:** Ngrok API key của bạn
 
 ### Bước 2: Chạy Ollama Server trên Google Colab
 * Tải lên file 2A_ollama_pinggy_ngrok.ipynb vào Google Colab.
 * Mở notebook và chạy lần lượt tất cả các cell theo thứ tự từ trên xuống.
-**📌 Lưu ý:**
-** **!ollama pull gpt-oss:20b** thành **!ollama pull llama3.2:1b**
+####📌 Lưu ý: **!ollama pull gpt-oss:20b** thành **!ollama pull llama3.2:1b**
 
 ### Bước 3: Lấy địa chỉ Ngrok Tunnel
 * Sau khi notebook chạy xong, tìm dòng có dạng: **ngrok tunnel https://xxxx.ngrok-free.dev -> http://127.0.0.1:11434**
