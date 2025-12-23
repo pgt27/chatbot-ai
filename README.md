@@ -1,8 +1,11 @@
 # 🤖 Chatbot – Loading – Powered by Ollama LLM
 
 > Đồ án môn học **Nhập môn Công nghệ Thông tin** > **Khoa Công nghệ Thông tin > Trường Đại học Khoa học Tự nhiên, ĐHQG-HCM**
+
 Dự án này xây dựng một Chatbot AI có giao diện trực quan, hỗ trợ đa cuộc hội thoại, lưu trữ lịch sử và kết nối với mô hình ngôn ngữ lớn thông qua Ollama Server.
+
 ---
+
 ## 🤖 Giao diện (UI)
 <img src="./images/ui.jpg" width="1734" height="1079" />
 
@@ -14,5 +17,22 @@ Dự án này xây dựng một Chatbot AI có giao diện trực quan, hỗ tr�
 5) Run the application code to start the chatbot.
 
 
-# Chatbot AI
-![Grant Chatbot AI - Nhóm 4](./images/grantt.jpg)
+## Tác giả:
+
+### Loading Chatbot - 25CTT3
+
+| Thành viên | MSSV |
+| :--- | :--- |
+| Phạm Gia | 25120233 |
+| Nguyễn Đình Thi | 25120231 |
+| Huỳnh Hoàng Nguyên | 25120213 |
+| Lương Hoàng Phúc | 25120221 |
+| Nguyễn Trần Hùng Sơn | 25120228 |
+
+Giảng viên hướng dẫn thực hành: Thầy Lê Đức Khoan.
+
+---
+
+<img src="./images/grantt.jpg" width="1734" height="1079" />
+
+---
